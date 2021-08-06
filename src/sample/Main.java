@@ -16,10 +16,10 @@ import java.util.concurrent.*;
 public class Main extends Application {
     //----------------Konfiguracija programa--------------------------
     int n = 2;  //st razcepov
-    boolean graphicsVisible = true;    //vklopi grafiko
+    boolean graphicsVisible = false;    //vklopi grafiko
     boolean resizeAndZoom = true;      //vklopi zoom in resize
     //running mode: 1. sekvencno 2. paralelno 3. distributed 4.meritve in primerjave
-    int runningMode = 2;
+    int runningMode = 4;
     //----------------------------------------------------------------
     double windowHeight = 600;  //sirina okna
     double windowWidth = 800;   //visina okna
@@ -175,7 +175,7 @@ public class Main extends Application {
         }
         else if (runningMode == 4){       //--------------------------------------------------------------------------------
             graphicsVisible = false;
-            for (int i = 20; i < 25; i++) {
+            for (int i = 5; i < 22; i++) {
                 System.out.println("--------------------------------------------------------------------------");
                 executorService =  Executors.newSingleThreadExecutor();
                 int finalI = i;
