@@ -11,12 +11,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
+import java.util.Iterator;
+import java.util.Vector;
 import java.util.concurrent.*;
 
 public class Main extends Application {
     //----------------Konfiguracija programa--------------------------
-    int n = 2;  //st razcepov
-    boolean graphicsVisible = false;    //vklopi grafiko
+    int n = 10;  //st razcepov
+    boolean graphicsVisible = true;    //vklopi grafiko
     boolean resizeAndZoom = true;      //vklopi zoom in resize
     //running mode: 1. sekvencno 2. paralelno 3. distributed 4.meritve in primerjave
     int runningMode = 4;
@@ -27,7 +29,6 @@ public class Main extends Application {
     double starty;  //levo ogljisce y
     double lenght; //dolzina zacetne stranice
     boolean flag = false;       //flag za spremembo zooma
-    public static BlockingQueue<Polygon> staticQueue;
     ExecutorService executorService;
 
     @Override
@@ -98,20 +99,19 @@ public class Main extends Application {
         }
         else if (runningMode == 2){     //--------------------------------------------------------------------------------
             checkComplexity();
-            BlockingQueue<Polygon> localQueue = new LinkedBlockingQueue<>();
-            TrianglesBox tri = new TrianglesBox(startx, starty, lenght, 0, n, graphicsVisible,localQueue);
-            ForkJoinPool commonPool = ForkJoinPool.commonPool();
-            commonPool.invoke(tri);
+            TrianglesTask task = new TrianglesTask(startx, starty, lenght, 0, n, graphicsVisible);
+            ForkJoinPool pool = new ForkJoinPool();
+            Vector<Polygon> triangles = pool.invoke(task);
 
-            //System.out.println("Trajanje paralelne verzije za " + i + " razcepov: " + (System.currentTimeMillis() - start));
             if (graphicsVisible) {
                 AnimatedZoomOperator zoomOperator = new AnimatedZoomOperator();
-                Group parallelroot = new Group();
-                staticQueue = new LinkedBlockingQueue<Polygon>();
-                while (!localQueue.isEmpty()){
-                    parallelroot.getChildren().add(localQueue.take());
+                Group root = new Group();
+                //draw triangles to group
+                for (int i = 0; i < triangles.size(); i++) {
+                    root.getChildren().add(triangles.get(i));
                 }
-                Scene s = new Scene(parallelroot, windowWidth, windowHeight, Color.rgb(191, 255, 0));
+                System.out.println(root.getChildren().size() + " size of drawn");
+                Scene s = new Scene(root, windowWidth, windowHeight, Color.rgb(191, 255, 0));
                 primaryStage.setTitle("Parallel Sierpinski triangles");
                 primaryStage.setScene(s);
                 primaryStage.show();
@@ -128,7 +128,7 @@ public class Main extends Application {
                         }else {
                             zoomFactor = 1/zoomFactor;
                         }
-                        zoomOperator.zoom(parallelroot, zoomFactor, event.getSceneX(), event.getSceneY());
+                        zoomOperator.zoom(root, zoomFactor, event.getSceneX(), event.getSceneY());
                     }
                 });
 
@@ -147,7 +147,6 @@ public class Main extends Application {
 
 
                 ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-                    //System.out.println("Height: " + primaryStage.getHeight() + " Width: " + primaryStage.getWidth());
                     double width = primaryStage.getWidth();
                     double height= primaryStage.getHeight();
                     double factorWidth = width/windowWidth;
@@ -156,54 +155,60 @@ public class Main extends Application {
                     windowHeight = height;
                     computeLength();
                     setStartingPoint();
-                    parallelroot.getChildren().clear();
-                    localQueue.clear();
-                    commonPool.invoke(new TrianglesBox(startx, starty, lenght, 0, n, graphicsVisible,localQueue));
-                    while (!localQueue.isEmpty()){
-                        try {
-                            parallelroot.getChildren().add(localQueue.take());
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                    root.getChildren().clear();
+                    triangles.clear();
+                    //TODO MAKE ANOTHER CALCULATION
+                    TrianglesTask t = new TrianglesTask(startx, starty, lenght, 0, n, graphicsVisible);
+                    Vector<Polygon> tri = pool.invoke(t);
+                    for (int i = 0; i < tri.size(); i++) {
+                        root.getChildren().add(tri.get(i));
                     }
+                    double stage_height = (lenght * Math.sqrt(3.0)) / 2;
+                    primaryStage.setMinWidth(lenght + 60.0);
+                    primaryStage.setMinHeight(stage_height + 60.0);
                 };
 
 
                 primaryStage.widthProperty().addListener(stageSizeListener);
                 primaryStage.heightProperty().addListener(stageSizeListener);
             }
+            //parallel mode end
         }
         else if (runningMode == 4){       //--------------------------------------------------------------------------------
             graphicsVisible = false;
-            for (int i = 5; i < 22; i++) {
+            for (int i = 5; i < 20; i++) {
                 System.out.println("--------------------------------------------------------------------------");
-                executorService =  Executors.newSingleThreadExecutor();
+                //executorService =  Executors.newSingleThreadExecutor();
                 int finalI = i;
-                executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        long startSeq = System.currentTimeMillis();
+
+                //SEQ TIMING
+//                executorService.submit(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        long startSeq = System.currentTimeMillis();
+//                        Fischer f = new Fischer(startx,starty,lenght,0,finalI,windowWidth,windowHeight,graphicsVisible);
+//                        f.sierpinski(startx,starty,lenght,0, finalI);
+//                        System.out.println("Sekvencna za " + finalI + " razcepov z nitjo: "+Thread.currentThread().getName()+
+//                                " čas: " + ( System.currentTimeMillis() - startSeq));
+//                    }
+//                });
+//                executorService.shutdown();
+
+                long startSeq = System.currentTimeMillis();
                         Fischer f = new Fischer(startx,starty,lenght,0,finalI,windowWidth,windowHeight,graphicsVisible);
                         f.sierpinski(startx,starty,lenght,0, finalI);
                         System.out.println("Sekvencna za " + finalI + " razcepov z nitjo: "+Thread.currentThread().getName()+
                                 " čas: " + ( System.currentTimeMillis() - startSeq));
-                    }
-                });
-                executorService.shutdown();
-                try {
-                    if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                        executorService.shutdownNow();
-                    }
-                } catch (InterruptedException e) {
-                    executorService.shutdownNow();
-                }
-                System.out.println(executorService.isShutdown() + " smo ugasnili singleThreadExe");
+                //SEQ TIMING END
 
-                TrianglesBox tri = new TrianglesBox(startx, starty, lenght, 0, i, graphicsVisible,staticQueue);
-                ForkJoinPool commonPool = ForkJoinPool.commonPool();
-                long start = System.currentTimeMillis();
-                commonPool.invoke(tri);
-                System.out.println("Trajanje paralelne verzije za " + i + " razcepov: " + (System.currentTimeMillis() - start));
+                //PARALLEL TIMING
+                long start_parallel = System.currentTimeMillis();
+                TrianglesTask task = new TrianglesTask(startx, starty, lenght, 0, n, graphicsVisible);
+                ForkJoinPool pool = new ForkJoinPool();
+                Vector<Polygon> triangles_test = pool.invoke(task);
+                System.out.println("Trajanje paralelne verzije za " + i + " razcepov: " + (System.currentTimeMillis() - start_parallel) + ". Thread " +
+                       Thread.currentThread().getName() );
+                //END PARALLEL TIMING
             }
         }else {// code block
             System.out.println("Enter correct mode");
