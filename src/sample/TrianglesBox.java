@@ -32,6 +32,11 @@ public class TrianglesBox extends RecursiveAction {
                 this.triangles.add(drawPolygon(x,y,len));
                 //this.root.getChildren().add(drawPolygon(x,y,len));
             }
+            //speed
+//            int sum = 0;
+//            for (int i = 0; i < 1000000; i++) {
+//                sum += i;
+//            }
         } else {
             TrianglesBox t1 = new TrianglesBox(x,y,len/2,level+1,max_level,drawShapes);
             //t1.fork();

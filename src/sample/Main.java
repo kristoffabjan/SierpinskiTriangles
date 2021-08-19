@@ -178,7 +178,7 @@ public class Main extends Application {
             graphicsVisible = false;
             int cores = Runtime.getRuntime().availableProcessors();
             ForkJoinPool pool = new ForkJoinPool(cores);
-            for (int i = 5; i < 22; i++) {
+            for (int i = 5; i < 23; i++) {
                 System.out.println("--------------------------------------------------------------------------");
 
                 //SEQ TIMING

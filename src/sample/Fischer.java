@@ -30,6 +30,11 @@ public class Fischer extends Group {
             if (drawShapes){
                 this.getChildren().add(trikotnikPolygon(x,y,len));
             }
+            //for speed comparison purposes
+//            int sum = 0;
+//            for (int i = 0; i < 1000000; i++) {
+//                sum += i;
+//            }
         }else{
             sierpinski(x,y,len/2,level +1, max_level);
             sierpinski(x + len/4,y - (int)((Math.sin((double)Math.PI/3)) * (double)(len/2)),len/2,level +1, max_level);
