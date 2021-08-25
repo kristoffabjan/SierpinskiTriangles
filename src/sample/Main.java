@@ -21,7 +21,7 @@ public class Main extends Application {
     boolean graphicsVisible = true;    //vklopi grafiko
     boolean resizeAndZoom = true;      //vklopi zoom in resize
     //running mode: 1. sekvencno 2. paralelno 3. distributed 4.meritve in primerjave
-    int runningMode = 4;
+    int runningMode = 2;
     //----------------------------------------------------------------
     double windowHeight = 600;  //sirina okna
     double windowWidth = 800;   //visina okna
@@ -143,7 +143,6 @@ public class Main extends Application {
                                 }
                             }
                         });
-
 
 
                 ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
