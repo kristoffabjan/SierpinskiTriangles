@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public class Main extends Application {
     //----------------Konfiguracija programa--------------------------
-    int n = 2;  //st razcepov
+    int n = 3;  //st razcepov
     boolean graphicsVisible = true;    //vklopi grafiko
     boolean resizeAndZoom = true;      //vklopi zoom in resize
     //running mode: 1. sekvencno 2. paralelno 3. distributed 4.meritve in primerjave
@@ -178,7 +178,6 @@ public class Main extends Application {
             int cores = Runtime.getRuntime().availableProcessors();
             ForkJoinPool pool = new ForkJoinPool(cores);
             for (int i = 5; i < 23; i++) {
-                System.out.println("--------------------------------------------------------------------------");
 
                 //SEQ TIMING
 //                executorService.submit(new Runnable() {
@@ -196,22 +195,28 @@ public class Main extends Application {
                 long startSeq = System.currentTimeMillis();
                 Fischer f = new Fischer(startx,starty,lenght,0,i,windowWidth,windowHeight,graphicsVisible);
                 f.sierpinski(startx,starty,lenght,0, i);
-                System.out.println("Sekvencna za " + i + " razcepov z nitjo: "+Thread.currentThread().getName()+
-                        " čas: " + ( System.currentTimeMillis() - startSeq));
+//                System.out.println("Sekvencna za " + i + " razcepov z nitjo: "+Thread.currentThread().getName()+
+//                        " čas: " + ( System.currentTimeMillis() - startSeq));
+                long final_time = ( System.currentTimeMillis() - startSeq);
+                System.out.println(i + ", " + final_time+ ", seq" );
+                if (final_time > 600000){
+                    break;
+                }
                 //SEQ TIMING END
 
                 //PARALLEL TIMING
-//                long start_parallel = System.currentTimeMillis();
-//                TrianglesTask task = new TrianglesTask(startx, starty, lenght, 0, i, graphicsVisible);
-//                Vector<Polygon> triangles_test = pool.invoke(task);
-//                System.out.println("Trajanje paralelne verzije za " + i + " razcepov: " + (System.currentTimeMillis() - start_parallel));
+                long start_parallel = System.currentTimeMillis();
+                TrianglesTask task = new TrianglesTask(startx, starty, lenght, 0, i, graphicsVisible);
+                Vector<Polygon> triangles_test = pool.invoke(task);
+                //System.out.println("Trajanje paralelne verzije za " + i + " razcepov: " + (System.currentTimeMillis() - start_parallel));
+                System.out.println(i + ", " + ( System.currentTimeMillis() - start_parallel) + ", par" );
                 //END PARALLEL TIMING
 
                 //PARALLEL TIMING
-                long start_parallel = System.currentTimeMillis();
-                TrianglesBox task = new TrianglesBox(startx, starty, lenght, 0, i,graphicsVisible);
-                pool.invoke(task);
-                System.out.println("Trajanje paralelne verzije TBox za " + i + " razcepov: " + (System.currentTimeMillis() - start_parallel));
+//                long start_parallel = System.currentTimeMillis();
+//                TrianglesBox task = new TrianglesBox(startx, starty, lenght, 0, i,graphicsVisible);
+//                pool.invoke(task);
+//                System.out.println("Trajanje paralelne verzije TBox za " + i + " razcepov: " + (System.currentTimeMillis() - start_parallel));
                 //END PARALLEL TIMING
             }
         }else {// code block

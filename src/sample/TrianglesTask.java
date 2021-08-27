@@ -40,9 +40,16 @@ public class TrianglesTask extends RecursiveTask<Vector<Polygon>> {
             t2.fork();
             t3.fork();
 
-            vector.addAll(t1.join());
-            vector.addAll(t2.join());
-            vector.addAll(t3.join());
+
+            if(drawShapes){
+                vector.addAll(t3.join());
+                vector.addAll(t2.join());
+                vector.addAll(t1.join());
+            }else{
+                t3.join();
+                t2.join();
+                t1.join();
+            }
         }
         return vector;
     }
